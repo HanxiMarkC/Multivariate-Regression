@@ -1,0 +1,76 @@
+---
+title: 'STAT 306: Project'
+output:
+  pdf_document: 
+    latex_engine: xelatex
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+options(tinytex.verbose = TRUE)
+setwd("C:/Users/fullm/Documents/STAT306 Finding Relationship in Data/Project")
+library(ggplot2)
+library(leaps)
+library(tidyverse)
+
+```
+
+
+
+
+```{r, echo=TRUE}
+# Load the dataset
+project <- read.csv("dataset.csv", head = TRUE)
+names(project)[names(project) == "ï..age"] <- "age"
+
+# Visualize the distribution of income
+hist(project$income)
+
+# Remove the data that income greater than 150000
+train <- subset(project, project$income <= 150000)
+
+# Rereate an appropriate plot between income and the rest explanatory variables
+attach(mtcars)
+par(mfrow = c(2,4))
+boxplot(income~sex, data = train, main = "Income VS Sex")
+boxplot(age~income, data = train, main = "Income VS Age")
+boxplot(income~drinks, data = train, main = "Income VS Drinks")
+boxplot(income~drugs, data = train, main = "Income VS Drugs")
+boxplot(income~offspring, data = train, main = "Income VS Offspring")
+boxplot(income~smokes, data = train, main = "Income VS Smokes")
+boxplot(income~status, data = train, main = "Income VS Status")
+
+# Fit the full model
+full.model <- lm(income~., data = train)
+summary(full.model)
+
+# Select the variables and refit the model
+model1 <- lm(income~age+drinks+drugs+sex+smokes, data = train)
+summary(model1)
+
+# Create the residual plot the fitted model
+plot(model1$residuals)
+qqnorm(model1$residuals)
+
+# Show some failed fitted models (determine to abandon)
+fit1.1 <- lm(sqrt(income)~age + I(age^2) + drinks + drugs + sex + smokes,data = train)
+summary(fit1.1)
+
+fit1.2 <- lm(sqrt(income)~age + I(age^3) + drinks + drugs + sex + smokes,data = train)
+summary(fit1.2)
+
+fit1.3 <- lm(log(income)~age + I(age^3) + drinks + drugs + sex + smokes,data = train)
+summary(fit1.3)
+
+# transform the fitted model
+model2 <- lm(log(income)~I(age^2)+age+drinks+drugs+sex+smokes, data = train)
+summary(model2)
+
+# Use regsubsets command to searches all models and selects the "best" for each size
+s <- regsubsets(income~. + I(age^2), data = train)
+ss <- summary(s)
+ss$which
+
+```
+
+
